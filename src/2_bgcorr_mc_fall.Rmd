@@ -1,0 +1,86 @@
+---
+title: "2_bgcorr_mc_fall"
+author: "Karin Emanuelson"
+date: "1/22/2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+## Setup
+knitr::opts_knit$set(root.dir='./..')
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(message=FALSE)
+library(tidyverse)
+library(lubridate)
+library(xts)
+library(dygraphs)
+library(ggrepel)
+library(knitr)
+library(plotly)
+library(ggthemes)
+library(RColorBrewer)
+library(htmltools)
+
+
+# Number of experiments
+exp=8
+```
+
+
+```{r}
+#Read In data
+chem_corr<- read_csv("data/out/chem_bg_corrected.csv")
+chem_corr_nest<-chem_corr%>%
+    # filter(date %in% injdates)%>%
+  arrange(date)%>%
+  group_by(date)%>%
+  nest()
+```
+
+```{r}
+#Create function to graph
+plotChem_corr <- function (df, loc, value = value_corr) {
+  date_title<-date(df$datetime[[1]])
+      ggplot(dplyr::filter(df, site==loc), aes(datetime, value_corr),group = 1) +
+      geom_point(shape = 16, size = 3) +
+      geom_line() +
+      theme_few() +
+      facet_wrap( ~ var, ncol = 1, scale = 'free_y')+
+      labs(title = date_title)
+}
+```
+
+## Visually inspect background corrected falling limb sample concentrations for each day.
+
+### Graph site 350
+```{r, echo = FALSE}
+corr3<-map(chem_corr_nest$data, plotChem_corr, loc='350', value =chem_corr_nest$data$value_corr )
+
+corr3[[1]]
+corr3[[2]]
+corr3[[3]]
+corr3[[4]]
+corr3[[5]]
+corr3[[6]]
+corr3[[7]]
+corr3[[8]]
+
+
+```
+
+### Graph Site 450
+```{r, echo = FALSE}
+corr4<-map(chem_corr_nest$data, plotChem_corr, loc='450', value =chem_corr_nest$data$value_corr )
+
+corr4[[1]]
+corr4[[2]]
+corr4[[3]]
+corr4[[4]]
+corr4[[5]]
+corr4[[6]]
+corr4[[7]]
+corr4[[8]]
+```

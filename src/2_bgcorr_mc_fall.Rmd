@@ -23,16 +23,13 @@ library(plotly)
 library(ggthemes)
 library(RColorBrewer)
 library(htmltools)
-
-
-# Number of experiments
-exp=8
 ```
 
 
 ```{r}
 #Read In data
-chem_corr<- read_csv("data/out/chem_bg_corrected.csv")
+chem_corr<- read_csv("data/out/chem_bg_corrected.csv")%>%
+    mutate(datetime = mdy_hm(datetime, tz = 'MST7MDT'))
 chem_corr_nest<-chem_corr%>%
     # filter(date %in% injdates)%>%
   arrange(date)%>%
@@ -42,9 +39,9 @@ chem_corr_nest<-chem_corr%>%
 
 ```{r}
 #Create function to graph
-plotChem_corr <- function (df, loc, value = value_corr) {
+plotChem_corr <- function (df, loc, value = value_corr_ppm) {
   date_title<-date(df$datetime[[1]])
-      ggplot(dplyr::filter(df, site==loc), aes(datetime, value_corr),group = 1) +
+      ggplot(dplyr::filter(df, site==loc), aes(datetime, value_corr_ppm),group = 1) +
       geom_point(shape = 16, size = 3) +
       geom_line() +
       theme_few() +
@@ -57,7 +54,7 @@ plotChem_corr <- function (df, loc, value = value_corr) {
 
 ### Graph site 350
 ```{r, echo = FALSE}
-corr3<-map(chem_corr_nest$data, plotChem_corr, loc='350', value =chem_corr_nest$data$value_corr )
+corr3<-map(chem_corr_nest$data, plotChem_corr, loc='350', value =chem_corr_nest$data$value_corr_ppm )
 
 corr3[[1]]
 corr3[[2]]

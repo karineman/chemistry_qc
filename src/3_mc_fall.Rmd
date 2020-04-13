@@ -1,0 +1,114 @@
+---
+title: "2_bgcorr_mc_fall"
+author: "Karin Emanuelson"
+date: "1/22/2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+## Setup
+knitr::opts_knit$set(root.dir='./..')
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(message=FALSE)
+library(tidyverse)
+library(lubridate)
+library(xts)
+library(dygraphs)
+library(ggrepel)
+library(knitr)
+library(plotly)
+library(ggthemes)
+library(RColorBrewer)
+library(htmltools)
+```
+
+
+```{r, include=FALSE}
+#Read In data
+chem_corr<- read_csv("data/out/chem_como.csv")%>%
+  mutate(datetime = mdy_hms(datetime, tz = 'MST7MDT'))%>%
+  mutate(date = date(datetime))
+
+#create lookup table for injection rounds and treatments
+treatment = data.frame(date = c("2018-06-26", "2018-06-28", "2018-06-30", "2018-07-02",   "2018-07-17", "2018-07-19", "2018-07-21", "2018-07-23"),
+  treatment = c('N', 'NC', 'NP', 'NCP', 'N', 'NC', 'NP', 'NCP'))%>%
+  # mutate(treatment= factor(treatment, levels = c('N', 'NC', 'NP', 'NCP')))%>%
+  mutate(inj_round = ifelse(
+    date %in% c("2018-06-26", "2018-06-28", "2018-06-30", "2018-07-02"),
+    1,
+    2
+  )) %>%
+  mutate(date = as.Date(date))
+  # mutate(C = as.factor(C)) %>%
+  # mutate(P = as.factor(P))
+
+# Filter for each injection
+injdates<-ymd(c('2018-06-26','2018-06-28', '2018-06-30', '2018-07-02', '2018-07-17' , '2018-07-19', '2018-07-21', '2018-07-23'))
+
+chem_corr_nest<-chem_corr%>%
+  filter(date %in% injdates)%>%
+  left_join(., treatment)%>%
+  arrange(date)%>%
+  group_by(date)%>%
+  nest()
+
+# chem_corr_nest<-chem_corr%>%
+#     # filter(date %in% injdates)%>%
+#   arrange(date)%>%
+#   group_by(date)%>%
+#   nest()
+```
+
+```{r, include=FALSE}
+#Create function to graph
+plotChem_corr <- function (df, loc, value = raw_value_ppm) {
+  date_title<-date(df$datetime[[1]])
+  inj_round_title<-df$inj_round[[1]]
+  treat_title<-df$treatment[[1]]
+  loc_title<-paste(loc, date_title, sep=" ")
+  t_title<-paste("Treatment", treat_title, sep=":")
+  r_title<-paste("Injection round", inj_round_title, sep=":")
+  head_title<-paste(loc_title, t_title, r_title, sep=" ")
+      ggplot(dplyr::filter(df, site==loc), aes(datetime, raw_value_ppm),group = 1) +
+      geom_point(shape = 16, size = 3) +
+      geom_line() +
+      theme_few() +
+      facet_wrap( ~ var, ncol = 1, scale = 'free_y')+
+      labs(title = head_title)
+      }
+```
+
+## Visually inspect background corrected falling limb sample concentrations for each day.
+
+### Graph site 350
+```{r, echo = FALSE}
+corr3<-map(chem_corr_nest$data, plotChem_corr, loc='350', value =chem_corr_nest$data$raw_value_ppm)
+
+corr3[[1]]
+corr3[[2]]
+corr3[[3]]
+corr3[[4]]
+corr3[[5]]
+corr3[[6]]
+corr3[[7]]
+corr3[[8]]
+
+
+```
+
+### Graph Site 450
+```{r, echo = FALSE}
+corr4<-map(chem_corr_nest$data, plotChem_corr, loc='450', value =chem_corr_nest$data$raw_value_ppm)
+
+corr4[[1]]
+corr4[[2]]
+corr4[[3]]
+corr4[[4]]
+corr4[[5]]
+corr4[[6]]
+corr4[[7]]
+corr4[[8]]
+```
